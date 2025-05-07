@@ -1,0 +1,8 @@
+flask
+flask-login
+requests
+oauthlib
+modal>=0.50.0
+groq>=0.3.0
+aiohttp
+python-dotenv

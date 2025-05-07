@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant Developer
+    participant FCLibrary
+    participant LLM
+    participant Modal
+    participant Cloud
+    participant Client
+    
+    Developer->>FCLibrary: from fc import FC
+    Developer->>FCLibrary: FC.configure(token="...")
+    
+    Developer->>FCLibrary: @FC.function<br>def my_func(x, y): return x + y
+    
+    Note over Developer,FCLibrary: First invocation triggers deployment
+    Developer->>FCLibrary: result = my_func(5, 10)
+    
+    FCLibrary->>FCLibrary: Analyze function dependencies
+    FCLibrary->>LLM: Request dependency analysis
+    LLM-->>FCLibrary: Return dependency specs
+    
+    FCLibrary->>Modal: Create container image with dependencies
+    Modal-->>FCLibrary: Image created
+    
+    FCLibrary->>Modal: Deploy function
+    Modal->>Cloud: Create serverless function
+    Cloud-->>Modal: Function deployed
+    Modal-->>FCLibrary: Deployment successful
+    
+    FCLibrary-->>Developer: Return result (15)
+    
+    Developer->>FCLibrary: url = my_func.get_url()
+    FCLibrary-->>Developer: Return URL
+    
+    Note over Developer,Client: External clients can now call the function
+    Client->>Cloud: HTTP request to function URL
+    Cloud->>Cloud: Execute function
+    Cloud-->>Client: Return result as JSON

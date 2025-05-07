@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Function Cloud - Login{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h2>Login</h2>
+            </div>
+            <div class="card-body text-center">
+                <p class="lead">Sign in with your Google account to get started.</p>
+                
+                {% if request.args.get('error') %}
+                <div class="alert alert-danger">
+                    {{ request.args.get('error') }}
+                </div>
+                {% endif %}
+                
+                <a href="{{ auth_url }}" class="btn btn-primary btn-lg mt-3">
+                    <img src="https://www.google.com/favicon.ico" alt="Google" width="20" height="20" class="me-2">
+                    Sign in with Google
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

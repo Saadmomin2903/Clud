@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Function Cloud - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h1 class="display-4 mb-4">Welcome to Function Cloud</h1>
+        <p class="lead">Deploy your Python functions to the cloud with a simple decorator.</p>
+        
+        <div class="mt-5">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2>Simple Function Deployment</h2>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded"><code>from function_cloud import FC
+
+# Configure with your token
+FC.configure(token="your_token")
+
+# Decorate your function
+@FC.function
+def add(x, y):
+    return x + y
+
+# Call it locally
+result = add(5, 10)
+print(f"Result: {result}")  # Result: 15
+
+# Get the cloud URL
+url = add.get_url()
+print(f"Function URL: {url}")</code></pre>
+                </div>
+            </div>
+            
+            <div class="mt-5">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Get Started</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

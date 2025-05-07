@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Function Cloud - Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Account</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ user.name }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <div class="mt-3">
+                    <button id="show-token-btn" class="btn btn-primary">Show Token</button>
+                    <button id="refresh-token-btn" class="btn btn-secondary">Refresh Token</button>
+                </div>
+                <div id="token-container" class="mt-3 d-none">
+                    <div class="input-group">
+                        <input type="text" id="token-input" class="form-control" readonly>
+                        <button id="copy-token-btn" class="btn btn-outline-secondary">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3>Documentation</h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <a href="#" target="_blank">Getting Started</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="#" target="_blank">API Reference</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="#" target="_blank">Examples</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Your Functions</h3>
+                <button class="btn btn-success">New Function</button>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <p>You don't have any functions yet. Get started by deploying your first function:</p>
+                    <pre class="bg-light p-3 rounded mt-3"><code>from function_cloud import FC
+
+# Configure with your token
+FC.configure(token="{{ user.token }}")
+
+# Decorate your function
+@FC.function
+def hello(name):
+    return f"Hello, {name}!"
+
+# Call it locally
+result = hello("World")
+print(result)  # Hello, World!
+
+# Get the cloud URL
+url = hello.get_url()
+print(f"Function URL: {url}")</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const showTokenBtn = document.getElementById('show-token-btn');
+        const refreshTokenBtn = document.getElementById('refresh-token-btn');
+        const tokenContainer = document.getElementById('token-container');
+        const tokenInput = document.getElementById('token-input');
+        const copyTokenBtn = document.getElementById('copy-token-btn');
+        
+        // Show token
+        showTokenBtn.addEventListener('click', function() {
+            fetch('/api/token')
+                .then(response => response.json())
+                .then(data => {
+                    tokenInput.value = data.token;
+                    tokenContainer.classList.remove('d-none');
+                });
+        });
+        
+        // Refresh token
+        refreshTokenBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to refresh your token? This will invalidate your current token.')) {
+                fetch('/api/token/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    tokenInput.value = data.token;
+                    tokenContainer.classList.remove('d-none');
+                    alert('Token refreshed successfully!');
+                });
+            }
+        });
+        
+        // Copy token
+        copyTokenBtn.addEventListener('click', function() {
+            tokenInput.select();
+            document.execCommand('copy');
+            alert('Token copied to clipboard!');
+        });
+    });
+</script>
+{% endblock %}

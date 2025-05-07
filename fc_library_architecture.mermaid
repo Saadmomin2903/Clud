@@ -1,0 +1,43 @@
+flowchart TB
+    subgraph "Developer Machine"
+        code[User Code]
+        fc[FC Library]
+        deps[Dependency Analyzer]
+        llm[LLM Integration]
+        token[Authentication Token]
+    end
+    
+    subgraph "Modal Cloud"
+        modal_api[Modal API]
+        deploy[Deployment Service]
+        containers[Container Management]
+        runtime[Function Runtime]
+        secrets[Secrets Management]
+    end
+    
+    subgraph "Public Access"
+        endpoint[Public Endpoints]
+        clients[API Clients]
+    end
+    
+    code -->|Decorated with FC| fc
+    fc -->|Authenticates with| token
+    fc -->|Analyzes| deps
+    deps -->|Consults| llm
+    llm -->|Generates dependency specs| fc
+    fc -->|Deploys to| modal_api
+    modal_api -->|Creates| deploy
+    deploy -->|Manages| containers
+    containers -->|Runs in| runtime
+    token -->|Stored in| secrets
+    runtime -->|Exposes| endpoint
+    endpoint -->|Called by| clients
+    clients -->|Returns results to| code
+
+    classDef primary fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef secondary fill:#bbf,stroke:#333,stroke-width:1px;
+    classDef tertiary fill:#bfb,stroke:#333,stroke-width:1px;
+    
+    class fc,token primary;
+    class deps,llm,modal_api,deploy,containers,runtime,secrets secondary;
+    class endpoint,clients,code tertiary;

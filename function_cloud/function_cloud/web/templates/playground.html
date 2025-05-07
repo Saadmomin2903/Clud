@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+
+{% block title %}Function Cloud - Developer Playground{% endblock %}
+
+{% block head %}
+<!-- CodeMirror CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+<style>
+    .CodeMirror {
+        height: 400px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .playground-container {
+        margin-top: 20px;
+    }
+    .result-container {
+        min-height: 200px;
+        max-height: 400px;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 15px;
+        margin-top: 20px;
+    }
+    .function-url {
+        word-break: break-all;
+    }
+    .tab-content {
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Developer Playground</h1>
+
+    {% if not current_user.is_authenticated %}
+    <div class="alert alert-warning">
+        <p>You need to <a href="{{ url_for('login') }}">log in</a> to use the playground.</p>
+    </div>
+    {% else %}
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs" id="playground-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="function-tab" data-bs-toggle="tab" data-bs-target="#function" type="button" role="tab" aria-controls="function" aria-selected="true">Basic Function</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="endpoint-tab" data-bs-toggle="tab" data-bs-target="#endpoint" type="button" role="tab" aria-controls="endpoint" aria-selected="false">API Endpoint</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="llm-tab" data-bs-toggle="tab" data-bs-target="#llm" type="button" role="tab" aria-controls="llm" aria-selected="false">LLM Function</button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="playground-tab-content">
+                <!-- Basic Function Tab -->
+                <div class="tab-pane fade show active" id="function" role="tabpanel" aria-labelledby="function-tab">
+                    <div class="mb-3">
+                        <label for="function-editor" class="form-label">Write your function:</label>
+                        <textarea id="function-editor" class="form-control">from function_cloud import FC
+import os
+from function_cloud.config import FCConfig
+
+# Set the Groq API key directly in all possible places
+os.environ["GROQ_API_KEY"] = "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"
+
+# Directly set the class variables
+FCConfig.GROQ_API_KEY = "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"
+FCConfig.llm_api_key = "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"
+
+# Configure with your token and explicitly set the LLM API key
+FC.configure(
+    token="{{ current_user.token }}",
+    llm_api_key="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"
+)
+
+@FC.function
+def add(a: int, b: int) -> int:
+    """Add two numbers and return the result."""
+    return a + b
+
+# Test the function
+result = add(5, 10)
+print(f"Result: {result}")
+
+# Get the function URL
+url = add.get_url()
+print(f"Function URL: {url}")
+</textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button id="run-function-btn" class="btn btn-primary">Run Function</button>
+                        <button id="deploy-function-btn" class="btn btn-success">Deploy to Cloud</button>
+                    </div>
+                </div>
+
+                <!-- API Endpoint Tab -->
+                <div class="tab-pane fade" id="endpoint" role="tabpanel" aria-labelledby="endpoint-tab">
+                    <div class="mb-3">
+                        <label for="endpoint-editor" class="form-label">Write your API endpoint:</label>
+                        <textarea id="endpoint-editor" class="form-control">from function_cloud import FC
+import os
+from function_cloud.config import FCConfig
+
+# Set the Groq API key directly in all possible places
+os.environ["GROQ_API_KEY"] = "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"
+
+# Directly set the class variables
+FCConfig.GROQ_API_KEY = "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"
+FCConfig.llm_api_key = "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"
+
+# Configure with your token and explicitly set the LLM API key
+FC.configure(
+    token="{{ current_user.token }}",
+    llm_api_key="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"
+)
+
+@FC.endpoint(methods=["GET", "POST"])
+def api_handler(name: str = None, action: str = "greet") -> dict:
+    """A simple API endpoint that greets users."""
+    if action == "greet":
+        return {"message": f"Hello, {name or 'World'}!"}
+    return {"error": "Invalid action"}
+
+# Test the endpoint
+result = api_handler(name="John")
+print(f"Result: {result}")
+
+# Get the endpoint URL
+url = api_handler.get_url()
+print(f"API URL: {url}")
+</textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button id="run-endpoint-btn" class="btn btn-primary">Run Endpoint</button>
+                        <button id="deploy-endpoint-btn" class="btn btn-success">Deploy to Cloud</button>
+                    </div>
+                </div>
+
+                <!-- LLM Function Tab -->
+                <div class="tab-pane fade" id="llm" role="tabpanel" aria-labelledby="llm-tab">
+                    <div class="mb-3">
+                        <label for="llm-editor" class="form-label">Write your LLM function:</label>
+                        <textarea id="llm-editor" class="form-control">from function_cloud import FC
+import os
+from function_cloud.config import FCConfig
+
+# Set the Groq API key directly in all possible places
+os.environ["GROQ_API_KEY"] = "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"
+
+# Directly set the class variables
+FCConfig.GROQ_API_KEY = "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"
+FCConfig.llm_api_key = "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"
+
+# Configure with your token and explicitly set the LLM API key
+FC.configure(
+    token="{{ current_user.token }}",
+    llm_api_key="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"
+)
+
+@FC.llm_function(model="llama3-8b")
+def generate_story(prompt: str, max_tokens: int = 500) -> str:
+    """Generate a story using an LLM."""
+    # The LLM will be automatically called with the prompt
+    # and the result will be returned
+    pass
+
+# Test the function
+prompt = "Write a short story about a robot learning to paint."
+result = generate_story(prompt, max_tokens=200)
+print(f"Generated story: {result}")
+
+# Get the function URL
+url = generate_story.get_url()
+print(f"Function URL: {url}")
+</textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button id="run-llm-btn" class="btn btn-primary">Run LLM Function</button>
+                        <button id="deploy-llm-btn" class="btn btn-success">Deploy to Cloud</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Results</h5>
+        </div>
+        <div class="card-body">
+            <div id="result-container" class="result-container">
+                <p class="text-muted">Run or deploy a function to see results here.</p>
+            </div>
+
+            <div id="url-container" class="mt-3 d-none">
+                <div class="alert alert-success">
+                    <h5>Function Deployed Successfully!</h5>
+                    <p>Your function is now available at:</p>
+                    <div class="input-group">
+                        <input type="text" id="function-url" class="form-control function-url" readonly>
+                        <button id="copy-url-btn" class="btn btn-outline-secondary">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- CodeMirror JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize CodeMirror editors
+        const functionEditor = CodeMirror.fromTextArea(document.getElementById('function-editor'), {
+            mode: 'python',
+            theme: 'monokai',
+            lineNumbers: true,
+            indentUnit: 4
+        });
+
+        const endpointEditor = CodeMirror.fromTextArea(document.getElementById('endpoint-editor'), {
+            mode: 'python',
+            theme: 'monokai',
+            lineNumbers: true,
+            indentUnit: 4
+        });
+
+        const llmEditor = CodeMirror.fromTextArea(document.getElementById('llm-editor'), {
+            mode: 'python',
+            theme: 'monokai',
+            lineNumbers: true,
+            indentUnit: 4
+        });
+
+        // Function to show results
+        function showResult(result) {
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.innerHTML = `<pre>${result}</pre>`;
+        }
+
+        // Function to show deployed URL
+        function showDeployedUrl(url) {
+            const urlContainer = document.getElementById('url-container');
+            const functionUrl = document.getElementById('function-url');
+
+            functionUrl.value = url;
+            urlContainer.classList.remove('d-none');
+        }
+
+        // Run function button
+        document.getElementById('run-function-btn').addEventListener('click', function() {
+            const code = functionEditor.getValue();
+
+            // Send code to server for execution
+            fetch('/api/playground/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showResult(data.output);
+            })
+            .catch(error => {
+                showResult(`Error: ${error.message}`);
+            });
+        });
+
+        // Deploy function button
+        document.getElementById('deploy-function-btn').addEventListener('click', function() {
+            const code = functionEditor.getValue();
+            const resultContainer = document.getElementById('result-container');
+
+            // Show loading message
+            resultContainer.innerHTML = '<div class="alert alert-info">Deploying function to the cloud... This may take a moment.</div>';
+
+            // Send code to server for deployment
+            fetch('/api/playground/deploy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code, type: 'function' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultContainer.innerHTML = `<div class="alert alert-danger">
+                        <h5>Deployment Error</h5>
+                        <p>There was an error deploying your function:</p>
+                        <pre>${data.error}</pre>
+                        <p>Full output:</p>
+                        <pre>${data.output}</pre>
+                    </div>`;
+                } else {
+                    showResult(data.output);
+                    if (data.url) {
+                        showDeployedUrl(data.url);
+                    } else {
+                        resultContainer.innerHTML += `<div class="alert alert-warning">
+                            <p>Function deployed, but no URL was found in the output. Make sure your code includes a line that prints the URL like:</p>
+                            <pre>print(f"Function URL: {my_function.get_url()}")</pre>
+                        </div>`;
+                    }
+                }
+            })
+            .catch(error => {
+                resultContainer.innerHTML = `<div class="alert alert-danger">
+                    <h5>Request Error</h5>
+                    <p>There was an error sending your request:</p>
+                    <pre>${error.message}</pre>
+                </div>`;
+            });
+        });
+
+        // Run endpoint button
+        document.getElementById('run-endpoint-btn').addEventListener('click', function() {
+            const code = endpointEditor.getValue();
+            const resultContainer = document.getElementById('result-container');
+
+            // Show loading message
+            resultContainer.innerHTML = '<div class="alert alert-info">Running endpoint code...</div>';
+
+            // Send code to server for execution
+            fetch('/api/playground/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showResult(data.output);
+            })
+            .catch(error => {
+                showResult(`Error: ${error.message}`);
+            });
+        });
+
+        // Deploy endpoint button
+        document.getElementById('deploy-endpoint-btn').addEventListener('click', function() {
+            const code = endpointEditor.getValue();
+            const resultContainer = document.getElementById('result-container');
+
+            // Show loading message
+            resultContainer.innerHTML = '<div class="alert alert-info">Deploying endpoint to the cloud... This may take a moment.</div>';
+
+            // Send code to server for deployment
+            fetch('/api/playground/deploy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code, type: 'endpoint' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultContainer.innerHTML = `<div class="alert alert-danger">
+                        <h5>Deployment Error</h5>
+                        <p>There was an error deploying your endpoint:</p>
+                        <pre>${data.error}</pre>
+                        <p>Full output:</p>
+                        <pre>${data.output}</pre>
+                    </div>`;
+                } else {
+                    showResult(data.output);
+                    if (data.url) {
+                        showDeployedUrl(data.url);
+                    } else {
+                        resultContainer.innerHTML += `<div class="alert alert-warning">
+                            <p>Endpoint deployed, but no URL was found in the output. Make sure your code includes a line that prints the URL like:</p>
+                            <pre>print(f"API URL: {my_endpoint.get_url()}")</pre>
+                        </div>`;
+                    }
+                }
+            })
+            .catch(error => {
+                resultContainer.innerHTML = `<div class="alert alert-danger">
+                    <h5>Request Error</h5>
+                    <p>There was an error sending your request:</p>
+                    <pre>${error.message}</pre>
+                </div>`;
+            });
+        });
+
+        // Run LLM function button
+        document.getElementById('run-llm-btn').addEventListener('click', function() {
+            const code = llmEditor.getValue();
+            const resultContainer = document.getElementById('result-container');
+
+            // Show loading message
+            resultContainer.innerHTML = '<div class="alert alert-info">Running LLM function code...</div>';
+
+            // Send code to server for execution
+            fetch('/api/playground/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showResult(data.output);
+            })
+            .catch(error => {
+                showResult(`Error: ${error.message}`);
+            });
+        });
+
+        // Deploy LLM function button
+        document.getElementById('deploy-llm-btn').addEventListener('click', function() {
+            const code = llmEditor.getValue();
+            const resultContainer = document.getElementById('result-container');
+
+            // Show loading message
+            resultContainer.innerHTML = '<div class="alert alert-info">Deploying LLM function to the cloud... This may take a moment.</div>';
+
+            // Send code to server for deployment
+            fetch('/api/playground/deploy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code, type: 'llm' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultContainer.innerHTML = `<div class="alert alert-danger">
+                        <h5>Deployment Error</h5>
+                        <p>There was an error deploying your LLM function:</p>
+                        <pre>${data.error}</pre>
+                        <p>Full output:</p>
+                        <pre>${data.output}</pre>
+                    </div>`;
+                } else {
+                    showResult(data.output);
+                    if (data.url) {
+                        showDeployedUrl(data.url);
+                    } else {
+                        resultContainer.innerHTML += `<div class="alert alert-warning">
+                            <p>LLM function deployed, but no URL was found in the output. Make sure your code includes a line that prints the URL like:</p>
+                            <pre>print(f"Function URL: {my_llm_function.get_url()}")</pre>
+                        </div>`;
+                    }
+                }
+            })
+            .catch(error => {
+                resultContainer.innerHTML = `<div class="alert alert-danger">
+                    <h5>Request Error</h5>
+                    <p>There was an error sending your request:</p>
+                    <pre>${error.message}</pre>
+                </div>`;
+            });
+        });
+
+        // Copy URL button
+        document.getElementById('copy-url-btn').addEventListener('click', function() {
+            const functionUrl = document.getElementById('function-url');
+            functionUrl.select();
+            document.execCommand('copy');
+
+            // Show tooltip or notification
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+                this.textContent = 'Copy';
+            }, 2000);
+        });
+    });
+</script>
+{% endblock %}

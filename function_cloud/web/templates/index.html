@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Function Cloud - Deploy Python Functions to the Cloud{% endblock %}
+
+{% block content %}
+<div class="hero bg-primary text-white py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-4 mb-3">Function Cloud</h1>
+                <p class="lead mb-4">Deploy Python functions to the cloud with a simple decorator. Turn any function into a serverless API endpoint in seconds.</p>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg">Go to Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-light btn-lg">Get Started</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Quick Start Section -->
+    <section class="mb-5">
+        <h2 class="mb-4">Quick Start</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="h5 mb-0">1. Installation</h3>
+                    </div>
+                    <div class="card-body">
+                        <pre class="bg-light p-3 mb-0"><code>pip install function-cloud</code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="h5 mb-0">2. Authentication</h3>
+                    </div>
+                    <div class="card-body">
+                        <pre class="bg-light p-3 mb-0"><code># Set up your credentials
+export MODAL_TOKEN_ID="your_token_id"
+export MODAL_TOKEN_SECRET="your_token_secret"
+export GROQ_API_KEY="your_groq_api_key"</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Basic Usage Section -->
+    <section class="mb-5">
+        <h2 class="mb-4">Basic Usage</h2>
+        <div class="card">
+            <div class="card-body">
+                <pre class="bg-light p-3"><code>from function_cloud import FC
+
+# Configure with your credentials
+FC.configure()  # Uses environment variables by default
+
+@FC.function
+def hello(name: str) -> str:
+    return f"Hello, {name}!"
+
+# Call it locally
+result = hello("World")
+print(result)  # Hello, World!
+
+# Get the cloud URL
+url = hello.get_url()
+print(f"Function URL: {url}")</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="mb-5">
+        <h2 class="mb-4">Key Features</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h5 card-title">Simple Deployment</h3>
+                        <p class="card-text">Deploy any Python function to the cloud with a simple decorator syntax. No complex configuration required.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h5 card-title">Smart Dependencies</h3>
+                        <p class="card-text">Automatic dependency detection powered by LLM technology ensures your functions have everything they need.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h5 card-title">API Integration</h3>
+                        <p class="card-text">Turn any function into a REST API endpoint with support for multiple HTTP methods.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Examples Section -->
+    <section class="mb-5">
+        <h2 class="mb-4">Code Examples</h2>
+        <div class="accordion" id="codeExamples">
+            <!-- Basic Function -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#basicFunction">
+                        Basic Function
+                    </button>
+                </h2>
+                <div id="basicFunction" class="accordion-collapse collapse show">
+                    <div class="accordion-body">
+                        <pre class="bg-light p-3"><code>@FC.function
+def calculate_fibonacci(n: int) -> int:
+    if n <= 1:
+        return n
+    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)
+
+# Use locally or in the cloud
+result = calculate_fibonacci(10)
+print(f"Fibonacci(10) = {result}")</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Endpoint -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#apiEndpoint">
+                        API Endpoint
+                    </button>
+                </h2>
+                <div id="apiEndpoint" class="accordion-collapse collapse">
+                    <div class="accordion-body">
+                        <pre class="bg-light p-3"><code>@FC.endpoint(methods=["GET", "POST"])
+def api_handler(name: str = None, action: str = "greet") -> dict:
+    if action == "greet":
+        return {"message": f"Hello, {name or 'World'}!"}
+    return {"error": "Invalid action"}</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Class Method -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#classMethod">
+                        Class Method
+                    </button>
+                </h2>
+                <div id="classMethod" class="accordion-collapse collapse">
+                    <div class="accordion-body">
+                        <pre class="bg-light p-3"><code>class DataProcessor:
+    def __init__(self):
+        self.processed_count = 0
+
+    @FC.method
+    def process_text(self, text: str) -> dict:
+        result = text.upper()
+        self.processed_count += 1
+        return {
+            "result": result,
+            "count": self.processed_count
+        }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication Section -->
+    <section class="mb-5">
+        <h2 class="mb-4">Authentication Options</h2>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="h5 mb-0">Environment Variables</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Set your credentials using environment variables:</p>
+                        <pre class="bg-light p-3 mb-3"><code>export MODAL_TOKEN_ID="your_token_id"
+export MODAL_TOKEN_SECRET="your_token_secret"
+export GROQ_API_KEY="your_groq_api_key"
+
+from function_cloud import FC
+FC.configure()  # Uses environment variables</code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3 class="h5 mb-0">Configuration File</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Create a config file at <code>~/.function_cloud/config.json</code>:</p>
+                        <pre class="bg-light p-3 mb-3"><code>{
+    "modal_token_id": "your_token_id",
+    "modal_token_secret": "your_token_secret",
+    "groq_api_key": "your_groq_api_key"
+}</code></pre>
+                        <p class="mb-0">Then in your code:</p>
+                        <pre class="bg-light p-3 mb-0"><code>from function_cloud import FC
+FC.configure()  # Loads from config file</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Enable syntax highlighting
+    document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightBlock(block);
+    });
+</script>
+{% endblock %}

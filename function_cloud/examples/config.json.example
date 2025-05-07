@@ -1,0 +1,14 @@
+{
+    "modal_token_id": "modal_token_id",
+    "modal_token_secret": "modal_token_secret",
+    "groq_api_key": "groq_api_key",
+    "google_client_id": "google_client_id",
+    "google_client_secret": "google_client_secret",
+    "llm_enabled": true,
+    "llm_provider": "groq",
+    "region": "us-east",
+    "memory": 1024,
+    "timeout": 60,
+    "cpu": 1,
+    "stub_name": "fc_app"
+}

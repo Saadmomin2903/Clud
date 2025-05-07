@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Function Cloud - Documentation{% endblock %}
+
+{% block head %}
+<style>
+    .docs-sidebar {
+        position: sticky;
+        top: 20px;
+    }
+    .docs-sidebar .nav-link {
+        padding: 0.25rem 0;
+        color: #495057;
+    }
+    .docs-sidebar .nav-link.active {
+        color: #4285F4;
+        font-weight: bold;
+    }
+    .docs-content h2 {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+    .docs-content h3 {
+        margin-top: 1.5rem;
+    }
+    .docs-content pre {
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="docs-sidebar">
+                <h5 class="mb-3">Documentation</h5>
+                <nav class="nav flex-column">
+                    <a class="nav-link" href="#getting-started">Getting Started</a>
+                    <a class="nav-link" href="#installation">Installation</a>
+                    <a class="nav-link" href="#authentication">Authentication</a>
+                    <a class="nav-link" href="#basic-usage">Basic Usage</a>
+                    <a class="nav-link" href="#function-types">Function Types</a>
+                    <a class="nav-link" href="#api-reference">API Reference</a>
+                    <a class="nav-link" href="#examples">Examples</a>
+                    <a class="nav-link" href="#advanced">Advanced Usage</a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="col-md-9 docs-content">
+            <h1 class="mb-4">Function Cloud Documentation</h1>
+            
+            <section id="getting-started">
+                <h2>Getting Started</h2>
+                <p>Function Cloud (FC) is a Python library that makes it easy to deploy Python functions to the cloud. With a simple decorator, you can turn any Python function into a serverless API endpoint.</p>
+                <p>Function Cloud uses <a href="https://modal.com" target="_blank">Modal</a> as its underlying deployment platform, providing a seamless experience for deploying and managing your functions.</p>
+            </section>
+            
+            <section id="installation">
+                <h2>Installation</h2>
+                <p>Install Function Cloud using pip:</p>
+                <pre><code class="language-bash">pip install function-cloud</code></pre>
+                
+                <p>For additional features, you can install optional dependencies:</p>
+                <pre><code class="language-bash"># For authentication features
+pip install function-cloud[auth]
+
+# For web interface
+pip install function-cloud[web]
+
+# For all features
+pip install function-cloud[all]</code></pre>
+            </section>
+            
+            <section id="authentication">
+                <h2>Authentication</h2>
+                <p>Function Cloud requires authentication to deploy functions to Modal. You can authenticate using one of the following methods:</p>
+                
+                <h3>Environment Variables</h3>
+                <pre><code class="language-bash"># Modal credentials
+export MODAL_TOKEN_ID="your_modal_token_id"
+export MODAL_TOKEN_SECRET="your_modal_token_secret"
+
+# Optional: Groq API key for LLM functions
+export GROQ_API_KEY="your_groq_api_key"</code></pre>
+                
+                <h3>Configuration File</h3>
+                <p>Create a configuration file at <code>~/.function_cloud/config.json</code>:</p>
+                <pre><code class="language-json">{
+    "modal_token_id": "your_modal_token_id",
+    "modal_token_secret": "your_modal_token_secret",
+    "groq_api_key": "your_groq_api_key"
+}</code></pre>
+                
+                <h3>Direct Configuration</h3>
+                <pre><code class="language-python">from function_cloud import FC
+
+FC.configure(
+    modal_token_id="your_modal_token_id",
+    modal_token_secret="your_modal_token_secret",
+    groq_api_key="your_groq_api_key"
+)</code></pre>
+                
+                <h3>Using a Token</h3>
+                <p>If you've created an account on Function Cloud, you can use your token for authentication:</p>
+                <pre><code class="language-python">from function_cloud import FC
+
+FC.configure(token="your_function_cloud_token")</code></pre>
+            </section>
+            
+            <section id="basic-usage">
+                <h2>Basic Usage</h2>
+                <p>Here's a simple example of how to use Function Cloud:</p>
+                <pre><code class="language-python">from function_cloud import FC
+
+# Configure with your credentials
+FC.configure()  # Uses environment variables by default
+
+@FC.function
+def hello(name: str) -> str:
+    return f"Hello, {name}!"
+
+# Call it locally
+result = hello("World")
+print(result)  # Hello, World!
+
+# Get the cloud URL
+url = hello.get_url()
+print(f"Function URL: {url}")</code></pre>
+            </section>
+            
+            <section id="function-types">
+                <h2>Function Types</h2>
+                
+                <h3>Basic Functions</h3>
+                <pre><code class="language-python">@FC.function
+def add(a: int, b: int) -> int:
+    return a + b</code></pre>
+                
+                <h3>API Endpoints</h3>
+                <pre><code class="language-python">@FC.endpoint(methods=["GET", "POST"])
+def api_handler(name: str = None, action: str = "greet") -> dict:
+    if action == "greet":
+        return {"message": f"Hello, {name or 'World'}!"}
+    return {"error": "Invalid action"}</code></pre>
+                
+                <h3>LLM Functions</h3>
+                <pre><code class="language-python">@FC.llm_function(model="llama3-8b")
+def generate_story(prompt: str, max_tokens: int = 500) -> str:
+    # The LLM will be automatically called with the prompt
+    # and the result will be returned
+    pass</code></pre>
+            </section>
+            
+            <section id="api-reference">
+                <h2>API Reference</h2>
+                
+                <h3>FC.configure</h3>
+                <p>Configure the Function Cloud library with your credentials.</p>
+                <pre><code class="language-python">FC.configure(
+    token: str = None,
+    modal_token_id: str = None,
+    modal_token_secret: str = None,
+    groq_api_key: str = None,
+    config_path: str = None,
+    validate_token: bool = False
+)</code></pre>
+                
+                <h3>FC.function</h3>
+                <p>Decorator to deploy a function to the cloud.</p>
+                <pre><code class="language-python">@FC.function(
+    name: str = None,
+    image: str = None,
+    dependencies: List[str] = None,
+    cpu: float = 1.0,
+    memory: int = 1024,
+    timeout: int = 60
+)
+def my_function(...):
+    ...</code></pre>
+                
+                <h3>FC.endpoint</h3>
+                <p>Decorator to deploy a function as an API endpoint.</p>
+                <pre><code class="language-python">@FC.endpoint(
+    methods: List[str] = ["GET"],
+    path: str = None,
+    auth: bool = True,
+    cors: bool = True,
+    rate_limit: int = None
+)
+def my_endpoint(...):
+    ...</code></pre>
+            </section>
+            
+            <section id="examples">
+                <h2>Examples</h2>
+                
+                <h3>Data Processing Function</h3>
+                <pre><code class="language-python">import pandas as pd
+
+@FC.function(dependencies=["pandas", "numpy"])
+def process_data(data_url: str) -> dict:
+    # Download data
+    df = pd.read_csv(data_url)
+    
+    # Process data
+    result = {
+        "rows": len(df),
+        "columns": len(df.columns),
+        "mean_values": df.mean().to_dict()
+    }
+    
+    return result</code></pre>
+                
+                <h3>Image Processing API</h3>
+                <pre><code class="language-python">from PIL import Image
+import io
+import base64
+
+@FC.endpoint(methods=["POST"])
+def process_image(image_data: str, operation: str = "resize") -> dict:
+    # Decode base64 image
+    image_bytes = base64.b64decode(image_data)
+    image = Image.open(io.BytesIO(image_bytes))
+    
+    # Process image
+    if operation == "resize":
+        image = image.resize((300, 300))
+    elif operation == "grayscale":
+        image = image.convert("L")
+    
+    # Encode result
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    result_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    
+    return {
+        "processed_image": result_data,
+        "operation": operation
+    }</code></pre>
+            </section>
+            
+            <section id="advanced">
+                <h2>Advanced Usage</h2>
+                
+                <h3>Custom Dependencies</h3>
+                <pre><code class="language-python">@FC.function(
+    dependencies=[
+        "pandas==2.0.0",
+        "numpy>=1.20.0",
+        "git+https://github.com/user/repo.git"
+    ]
+)
+def my_function():
+    ...</code></pre>
+                
+                <h3>Custom Docker Image</h3>
+                <pre><code class="language-python">@FC.function(
+    image="python:3.9-slim"
+)
+def my_function():
+    ...</code></pre>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight code blocks
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightBlock(block);
+        });
+        
+        // Active link highlighting
+        const navLinks = document.querySelectorAll('.docs-sidebar .nav-link');
+        const sections = document.querySelectorAll('.docs-content section');
+        
+        window.addEventListener('scroll', function() {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

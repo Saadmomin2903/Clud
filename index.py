@@ -6,15 +6,52 @@ import os
 import sys
 import importlib
 import pkgutil
+import shutil
 from dotenv import load_dotenv
 
-# Fix imports for Vercel deployment
-try:
-    from fix_imports import fix_imports
-    fix_imports()
-    print("Fixed imports for Vercel deployment")
-except Exception as e:
-    print(f"Error fixing imports: {e}")
+# Add the current directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+# Fix the import issue by creating a symlink or copying files
+function_cloud_dir = os.path.join(current_dir, 'function_cloud')
+nested_function_cloud_dir = os.path.join(function_cloud_dir, 'function_cloud')
+
+# Create the nested function_cloud directory if it doesn't exist
+if not os.path.exists(nested_function_cloud_dir):
+    os.makedirs(nested_function_cloud_dir, exist_ok=True)
+    print(f"Created directory: {nested_function_cloud_dir}")
+
+    # Copy auth.py to the nested directory
+    auth_source = os.path.join(function_cloud_dir, 'auth', 'auth.py')
+    auth_dest = os.path.join(nested_function_cloud_dir, 'auth.py')
+    if os.path.exists(auth_source):
+        shutil.copy2(auth_source, auth_dest)
+        print(f"Copied {auth_source} to {auth_dest}")
+
+    # Create __init__.py in the nested directory
+    with open(os.path.join(nested_function_cloud_dir, '__init__.py'), 'w') as f:
+        f.write("""
+# This file redirects imports from function_cloud.function_cloud to function_cloud
+import sys
+import importlib
+from pathlib import Path
+
+# Get the parent directory
+parent_dir = str(Path(__file__).parent.parent)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+# Import all modules from the parent function_cloud package
+import function_cloud
+
+# Make all attributes of the parent package available in this package
+for attr in dir(function_cloud):
+    if not attr.startswith('__'):
+        globals()[attr] = getattr(function_cloud, attr)
+""")
+    print(f"Created __init__.py in {nested_function_cloud_dir}")
 
 # Load environment variables from .env file if it exists (for local development)
 load_dotenv()
@@ -27,10 +64,8 @@ required_vars = ["MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "GROQ_API_KEY"]
 missing_vars = [var for var in required_vars if not os.environ.get(var)]
 
 if missing_vars:
-    print(f"Error: Missing required environment variables: {', '.join(missing_vars)}")
-    print("Please set these variables in your environment or .env file.")
-    if not os.environ.get("VERCEL_ENV"):  # Only exit if not running on Vercel
-        sys.exit(1)
+    print(f"Warning: Missing environment variables: {', '.join(missing_vars)}")
+    print("These will be needed for full functionality.")
 
 # Debug information
 print("Python version:", sys.version)
@@ -38,15 +73,26 @@ print("\nPython path:")
 for path in sys.path:
     print(f"  - {path}")
 
-print("\nDirectory structure:")
-for root, dirs, files in os.walk('.'):
+print("\nDirectory structure after fixes:")
+for root, dirs, files in os.walk('.', topdown=True):
     level = root.replace('.', '').count(os.sep)
     indent = ' ' * 4 * level
-    print(f"{indent}{os.path.basename(root)}/")
+    print(f"{indent}{os.path.basename(root) or '.'}/")
     sub_indent = ' ' * 4 * (level + 1)
-    for f in files:
+    for f in sorted(files):
         if f.endswith('.py'):
             print(f"{sub_indent}{f}")
+
+# Monkey patch the import system to handle the nested import
+class CustomFinder:
+    def find_spec(self, fullname, path, target=None):
+        if fullname == 'function_cloud.function_cloud.auth':
+            # Redirect to function_cloud.auth.auth
+            spec = importlib.util.find_spec('function_cloud.auth.auth')
+            return spec
+        return None
+
+sys.meta_path.insert(0, CustomFinder())
 
 # Try to import the module directly
 try:

@@ -21,8 +21,10 @@ except ImportError:
 class FCAuth:
     """Authentication manager for Function Cloud."""
 
-    # Default paths
-    DEFAULT_CONFIG_DIR = os.path.expanduser("~/.function_cloud")
+    # Default paths - use /tmp for Vercel compatibility
+    DEFAULT_CONFIG_DIR = os.environ.get("FC_CONFIG_DIR") or (
+        "/tmp/function_cloud" if os.environ.get("VERCEL") else os.path.expanduser("~/.function_cloud")
+    )
     DEFAULT_CREDENTIALS_FILE = os.path.join(DEFAULT_CONFIG_DIR, "credentials.json")
     DEFAULT_TOKENS_FILE = os.path.join(DEFAULT_CONFIG_DIR, "tokens.json")
 

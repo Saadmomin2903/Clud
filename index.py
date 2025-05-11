@@ -59,6 +59,15 @@ load_dotenv()
 # Set default environment variables if not provided
 os.environ.setdefault("FC_SECRET_KEY", os.environ.get("FC_SECRET_KEY", os.urandom(24).hex()))
 
+# Set VERCEL environment variable if running on Vercel
+if os.environ.get("VERCEL_REGION") or os.environ.get("VERCEL_URL"):
+    os.environ.setdefault("VERCEL", "1")
+
+# Ensure the temporary directory exists and is writable
+tmp_dir = "/tmp/function_cloud"
+os.makedirs(tmp_dir, exist_ok=True)
+os.environ.setdefault("FC_CONFIG_DIR", tmp_dir)
+
 # Check for required environment variables
 required_vars = ["MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "GROQ_API_KEY"]
 missing_vars = [var for var in required_vars if not os.environ.get(var)]

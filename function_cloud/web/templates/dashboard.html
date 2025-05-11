@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Function Cloud{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Dashboard</h1>
+        <div>
+            <button id="refreshTokenBtn" class="btn btn-outline-primary me-2">
+                <i class="bi bi-arrow-repeat"></i> Refresh Token
+            </button>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">User Information</h5>
+                    <div class="mb-3">
+                        <strong>Name:</strong> {{ user.name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Email:</strong> {{ user.email }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Your API Token</h5>
+                    <p class="text-muted">Use this token to authenticate your Function Cloud API requests.</p>
+                    
+                    <div class="input-group mb-3">
+                        <input type="text" id="tokenInput" class="form-control" value="{{ user.token }}" readonly>
+                        <button class="btn btn-outline-secondary" type="button" id="copyTokenBtn">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">How to use your token:</h6>
+                        <p class="mb-0">Add this token to your <code>.env</code> file or set it as an environment variable:</p>
+                        <pre class="mt-2 mb-0"><code>FC_API_TOKEN={{ user.token }}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Getting Started</h5>
+                    
+                    <div class="mb-4">
+                        <h6>1. Install the Function Cloud library</h6>
+                        <pre><code>pip install function-cloud</code></pre>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>2. Create a simple function</h6>
+                        <pre><code>from function_cloud import FC
+
+@FC.function()
+def hello(name="World"):
+    return f"Hello, {name}!"
+
+if __name__ == "__main__":
+    # Deploy the function
+    url = hello.deploy()
+    print(f"Function deployed at: {url}")
+    
+    # Test the function
+    result = hello("Function Cloud")
+    print(result)  # Output: Hello, Function Cloud!</code></pre>
+                    </div>
+                    
+                    <div>
+                        <h6>3. Access your function</h6>
+                        <p>Your function is now available as an API endpoint and can be called from anywhere!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Copy token to clipboard
+    const copyTokenBtn = document.getElementById('copyTokenBtn');
+    const tokenInput = document.getElementById('tokenInput');
+    
+    copyTokenBtn.addEventListener('click', function() {
+        tokenInput.select();
+        document.execCommand('copy');
+        
+        // Change button text temporarily
+        const originalText = copyTokenBtn.innerHTML;
+        copyTokenBtn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+        setTimeout(function() {
+            copyTokenBtn.innerHTML = originalText;
+        }, 2000);
+    });
+    
+    // Refresh token
+    const refreshTokenBtn = document.getElementById('refreshTokenBtn');
+    
+    refreshTokenBtn.addEventListener('click', function() {
+        // Disable button and show loading state
+        refreshTokenBtn.disabled = true;
+        refreshTokenBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Refreshing...';
+        
+        // Make API request to refresh token
+        fetch('/api/token/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update token input
+            tokenInput.value = data.token;
+            
+            // Reset button
+            refreshTokenBtn.disabled = false;
+            refreshTokenBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Refresh Token';
+            
+            // Show success message
+            alert('Token refreshed successfully!');
+        })
+        .catch(error => {
+            console.error('Error refreshing token:', error);
+            
+            // Reset button
+            refreshTokenBtn.disabled = false;
+            refreshTokenBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Refresh Token';
+            
+            // Show error message
+            alert('Error refreshing token. Please try again.');
+        });
+    });
+});
+</script>
+{% endblock %}

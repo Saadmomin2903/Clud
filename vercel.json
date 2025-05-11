@@ -17,8 +17,5 @@
   ],
   "env": {
     "PYTHONPATH": "."
-  },
-  "buildEnvironment": {
-    "PYTHONPATH": "."
   }
 }
